@@ -1,0 +1,5 @@
+{
+  "name": "gsm-proxy",
+  "compatibility_date": "2026-02-13",
+  "main": "index.js" 
+}
