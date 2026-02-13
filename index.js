@@ -1,15 +1,18 @@
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request) {
     const url = new URL(request.url);
     const query = url.searchParams.get("q");
 
-    // Homepage ya bina query ke request handling
+    // Homepage check
     if (!query) {
-      return new Response("Lucky Telecom GSM API is Running...", { status: 200 });
+      return new Response("Lucky Telecom GSM API is Running...", { 
+        status: 200,
+        headers: { "Content-Type": "text/plain", "Access-Control-Allow-Origin": "*" } 
+      });
     }
 
     try {
-      // GSM Arena Mobile search result page
+      // GSM Arena Mobile search result fetcher
       const gsmUrl = `https://m.gsmarena.com/results.php3?sQuickSearch=yes&sName=${encodeURIComponent(query)}`;
       
       const response = await fetch(gsmUrl, {
@@ -21,33 +24,32 @@ export default {
       const html = await response.text();
       const results = [];
 
-      // Regex to find images and names
+      // Regex for image and names extraction
       const imgRegex = /<img src="(https:\/\/fdn2\.gsmarena\.com\/vv\/bigpic\/[^"]+)"/g;
       const nameRegex = /<strong><span>([^<]+)<\/span><\/strong>/g;
 
       let imgMatch;
-      let nameMatch;
-
       while ((imgMatch = imgRegex.exec(html)) !== null) {
-        nameMatch = nameRegex.exec(html);
+        let nameMatch = nameRegex.exec(html);
+        let originalImg = imgMatch[1];
+        
         results.push({
           name: nameMatch ? nameMatch[1] : "Mobile Phone",
-          // Original image from GSM Arena
-          image: imgMatch[1],
-          // Encrypted-style URL format (Proxy via weserv for stability)
-          encrypted_url: `https://images.weserv.nl/?url=${imgMatch[1].replace('https://', '')}&w=300&il`
+          image: originalImg,
+          // Encrypted-style URL via Weserv Proxy for stability
+          encrypted_url: `https://images.weserv.nl/?url=${originalImg.replace('https://', '')}&w=300&il`
         });
       }
 
       return new Response(JSON.stringify(results), {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*" // Sabse important: Taki index.html se connect ho sake
+          "Access-Control-Allow-Origin": "*" 
         }
       });
 
     } catch (error) {
-      return new Response(JSON.stringify({ error: "Data fetch nahi ho paya" }), {
+      return new Response(JSON.stringify({ error: "Backend error" }), {
         status: 500,
         headers: { "Access-Control-Allow-Origin": "*" }
       });
