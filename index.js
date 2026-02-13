@@ -3,7 +3,7 @@ export default {
     const url = new URL(request.url);
     const query = url.searchParams.get("q");
 
-    // 1. API Logic: Jab user model search karega
+    // 1. API Logic: Search handle karega
     if (query) {
       try {
         const gsmUrl = `https://m.gsmarena.com/results.php3?sQuickSearch=yes&sName=${encodeURIComponent(query)}`;
@@ -13,7 +13,6 @@ export default {
         const html = await response.text();
         const results = [];
         
-        // GSM Arena se images aur names nikalna
         const imgRegex = /<img src="(https:\/\/fdn2\.gsmarena\.com\/vv\/bigpic\/[^"]+)"/g;
         const nameRegex = /<strong><span>([^<]+)<\/span><\/strong>/g;
 
@@ -24,26 +23,28 @@ export default {
           results.push({
             name: nameMatch ? nameMatch[1] : "Mobile Phone",
             image: originalImg,
-            // Google encrypted style thumbnail format
             encrypted_url: `https://images.weserv.nl/?url=${originalImg.replace('https://', '')}&w=400&il`
           });
         }
         return new Response(JSON.stringify(results), {
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+          headers: { 
+            "Content-Type": "application/json", 
+            "Access-Control-Allow-Origin": "*" 
+          }
         });
       } catch (e) {
         return new Response(JSON.stringify([]), { headers: { "Access-Control-Allow-Origin": "*" } });
       }
     }
 
-    // 2. UI Logic: Jab aap direct workers.dev wala link kholenge
+    // 2. UI Logic: Lucky Telecom ka main page
     const htmlUI = `
     <!DOCTYPE html>
     <html lang="hi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Lucky Telecom - Phone Finder Pro</title>
+        <title>Lucky Telecom - Phone Finder</title>
         <style>
             body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; text-align: center; margin: 0; padding: 20px; }
             .container { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
@@ -66,12 +67,12 @@ export default {
             <span class="brand">Lucky Telecom</span>
             <span class="location">Ballia, Bihar</span>
             <div class="search-box">
-                <input type="text" id="phoneInput" placeholder="Model Name (e.g. Reno 10)">
+                <input type="text" id="phoneInput" placeholder="Model Name (e.g. Vivo T4X)">
                 <button onclick="search()">Search</button>
             </div>
             <div id="loader" class="loader">🔍 Photo dhund raha hoon...</div>
             <div id="gallery"></div>
-            <p style="font-size: 10px; color: #bbb; margin-top: 20px;">Lucky Telecom - Raj Kumar</p>
+            <p style="font-size: 10px; color: #bbb; margin-top: 20px;">Raj Kumar - Lucky Telecom</p>
         </div>
         <script>
             async function search() {
@@ -85,7 +86,7 @@ export default {
                     const response = await fetch('?q=' + encodeURIComponent(query));
                     const data = await response.json();
                     if (data.length === 0) {
-                        gallery.innerHTML = "Bhai, koi photo nahi mili! Sahi model likhein.";
+                        gallery.innerHTML = "Bhai, koi photo nahi mili!";
                     } else {
                         data.forEach((phone, index) => {
                             gallery.innerHTML += \`
@@ -101,7 +102,7 @@ export default {
                             \`;
                         });
                     }
-                } catch (e) { gallery.innerHTML = "Error ho gaya! Network check karein."; }
+                } catch (e) { gallery.innerHTML = "Error ho gaya!"; }
                 loader.style.display = 'none';
             }
             function copyText(id) {
@@ -111,7 +112,7 @@ export default {
         </script>
     </body>
     </html>
-    \`;
+    `;
 
     return new Response(htmlUI, { headers: { "Content-Type": "text/html" } });
   }
