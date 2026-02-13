@@ -7,7 +7,7 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; text-align: center; padding: 20px; margin: 0; }
         .container { max-width: 480px; margin: auto; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .brand { color: #007bff; font-weight: bold; font-size: 22px; margin-bottom: 5px; display: block; }
+        .brand { color: #007bff; font-weight: bold; font-size: 24px; margin-bottom: 5px; display: block; }
         .location { color: #888; font-size: 13px; margin-bottom: 25px; display: block; }
         .search-box { display: flex; gap: 10px; margin-bottom: 25px; }
         input { flex: 1; padding: 15px; border: 2px solid #eee; border-radius: 12px; outline: none; font-size: 16px; }
@@ -15,11 +15,11 @@
         
         #gallery { display: grid; grid-template-columns: 1fr; gap: 20px; }
         .card { background: #fff; border: 1px solid #f0f0f0; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: left; }
-        .card img { width: 100%; height: auto; display: block; object-fit: contain; padding: 15px; min-height: 250px; background: #fff; }
+        .card img { width: 100%; height: auto; display: block; padding: 15px; background: #fff; min-height: 250px; object-fit: contain; }
         .card-info { padding: 15px; font-weight: bold; color: #333; border-top: 1px solid #f5f5f5; font-size: 18px; }
         
         .url-box { padding: 12px; background: #f8f9fa; border-top: 1px solid #eee; font-size: 11px; color: #666; word-break: break-all; }
-        .copy-btn { margin-top: 8px; background: #28a745; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        .copy-btn { margin: 10px 15px 15px; background: #28a745; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: calc(100% - 30px); font-weight: bold; }
         
         .loader { display: none; margin: 20px; color: #007bff; font-weight: bold; }
     </style>
@@ -35,8 +35,10 @@
         <button onclick="searchMobile()">Search</button>
     </div>
 
-    <div id="loader" class="loader">🔍 Fetching Real-time GSM Data...</div>
+    <div id="loader" class="loader">🔍 Loading Real GSM Data...</div>
     <div id="gallery"></div>
+    
+    <p style="font-size: 11px; color: #bbb; margin-top: 25px;">Lucky Telecom - Raj Kumar</p>
 </div>
 
 <script>
@@ -45,20 +47,20 @@
         const gallery = document.getElementById('gallery');
         const loader = document.getElementById('loader');
 
-        if (!query) return alert("Bhai phone ka naam likho!");
+        if (!query) return alert("Pehle phone ka naam likho!");
 
         gallery.innerHTML = '';
         loader.style.display = 'block';
 
-        // APNA CLOUDFLARE WORKER URL YAHAN DAALEIN
-        const workerUrl = `https://gsm-proxy.yourname.workers.dev?q=${encodeURIComponent(query)}`;
+        // Aapka updated worker URL
+        const workerUrl = `https://update-worker-name-to-image-search-g-08f8-image-search-gsmarena.rajkumarbgs851211.workers.dev?q=${encodeURIComponent(query)}`;
 
         try {
             const response = await fetch(workerUrl);
             const data = await response.json();
 
             if (data.length === 0) {
-                gallery.innerHTML = "<p>Koi results nahi mile. Model check karein.</p>";
+                gallery.innerHTML = "<p style='padding:20px;'>Koi image nahi mili. Name check karein.</p>";
             } else {
                 data.forEach((phone, index) => {
                     const card = document.createElement('div');
@@ -69,14 +71,14 @@
                         <div class="url-box">
                             <strong>ENCRYPTED URL:</strong><br>
                             <span id="url-${index}">${phone.encrypted_url}</span>
-                            <button class="copy-btn" onclick="copyText('url-${index}')">Copy Image URL</button>
                         </div>
+                        <button class="copy-btn" onclick="copyText('url-${index}')">Copy URL</button>
                     `;
                     gallery.appendChild(card);
                 });
             }
         } catch (error) {
-            gallery.innerHTML = "<p>Server error! Worker check karein.</p>";
+            gallery.innerHTML = "<p style='color:red; padding:20px;'>Error: Worker connect nahi ho paya.</p>";
         } finally {
             loader.style.display = 'none';
         }
@@ -85,7 +87,7 @@
     function copyText(id) {
         const text = document.getElementById(id).innerText;
         navigator.clipboard.writeText(text).then(() => {
-            alert("URL Copied to Clipboard!");
+            alert("Image URL copy ho gaya!");
         });
     }
 </script>
