@@ -3,33 +3,37 @@ export default {
     const url = new URL(request.url);
     const query = url.searchParams.get("q");
 
-    // 1. API Logic: Search handle karega
+    // 1. Backend Search Logic
     if (query) {
       try {
-        const gsmUrl = `https://m.gsmarena.com/results.php3?sQuickSearch=yes&sName=${encodeURIComponent(query)}`;
-        const response = await fetch(gsmUrl, {
-          headers: { "User-Agent": "Mozilla/5.0 (Linux; Android 10)" }
+        // GSM Arena Mobile Result Search
+        const searchUrl = `https://m.gsmarena.com/results.php3?sQuickSearch=yes&sName=${encodeURIComponent(query)}`;
+        
+        const response = await fetch(searchUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36"
+          }
         });
+
         const html = await response.text();
         const results = [];
         
-        const imgRegex = /<img src="(https:\/\/fdn2\.gsmarena\.com\/vv\/bigpic\/[^"]+)"/g;
-        const nameRegex = /<strong><span>([^<]+)<\/span><\/strong>/g;
-
-        let imgMatch;
-        while ((imgMatch = imgRegex.exec(html)) !== null) {
-          let nameMatch = nameRegex.exec(html);
-          const originalImg = imgMatch[1];
+        // Photos aur Name nikalne ka updated regex
+        const itemRegex = /<li><a href="([^"]+)"><img src="([^"]+)"[^>]*><strong><span>([^<]+)<\/span><\/strong><\/a><\/li>/g;
+        
+        let match;
+        while ((match = itemRegex.exec(html)) !== null) {
           results.push({
-            name: nameMatch ? nameMatch[1] : "Mobile Phone",
-            image: originalImg,
-            encrypted_url: `https://images.weserv.nl/?url=${originalImg.replace('https://', '')}&w=400&il`
+            name: match[3],
+            image: match[2],
+            encrypted_url: `https://images.weserv.nl/?url=${match[2].replace('https://', '')}&w=400&il`
           });
         }
+
         return new Response(JSON.stringify(results), {
           headers: { 
-            "Content-Type": "application/json", 
-            "Access-Control-Allow-Origin": "*" 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
           }
         });
       } catch (e) {
@@ -37,14 +41,14 @@ export default {
       }
     }
 
-    // 2. UI Logic: Lucky Telecom ka main page
+    // 2. Frontend UI Logic (Lucky Telecom Style)
     const htmlUI = `
     <!DOCTYPE html>
     <html lang="hi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Lucky Telecom - Phone Finder</title>
+        <title>Lucky Telecom - Phone Finder Pro</title>
         <style>
             body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; text-align: center; margin: 0; padding: 20px; }
             .container { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
@@ -67,7 +71,7 @@ export default {
             <span class="brand">Lucky Telecom</span>
             <span class="location">Ballia, Bihar</span>
             <div class="search-box">
-                <input type="text" id="phoneInput" placeholder="Model Name (e.g. Vivo T4X)">
+                <input type="text" id="phoneInput" placeholder="Vivo T4X ya Reno 10 likhein">
                 <button onclick="search()">Search</button>
             </div>
             <div id="loader" class="loader">🔍 Photo dhund raha hoon...</div>
@@ -77,7 +81,7 @@ export default {
         <script>
             async function search() {
                 const query = document.getElementById('phoneInput').value.trim();
-                if (!query) return alert("Pehle phone ka naam likhein!");
+                if (!query) return alert("Phone ka naam likhein!");
                 const loader = document.getElementById('loader');
                 const gallery = document.getElementById('gallery');
                 loader.style.display = 'block';
@@ -86,7 +90,7 @@ export default {
                     const response = await fetch('?q=' + encodeURIComponent(query));
                     const data = await response.json();
                     if (data.length === 0) {
-                        gallery.innerHTML = "Bhai, koi photo nahi mili!";
+                        gallery.innerHTML = "Bhai, koi photo nahi mili! Model name check karein.";
                     } else {
                         data.forEach((phone, index) => {
                             gallery.innerHTML += \`
@@ -102,7 +106,7 @@ export default {
                             \`;
                         });
                     }
-                } catch (e) { gallery.innerHTML = "Error ho gaya!"; }
+                } catch (e) { gallery.innerHTML = "Error ho gaya! Network check karein."; }
                 loader.style.display = 'none';
             }
             function copyText(id) {
@@ -112,7 +116,7 @@ export default {
         </script>
     </body>
     </html>
-    `;
+    \`;
 
     return new Response(htmlUI, { headers: { "Content-Type": "text/html" } });
   }
